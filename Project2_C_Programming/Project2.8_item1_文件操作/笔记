@@ -1,1 +1,387 @@
+/*文件操作函数：
+*	FILE* fopen(文件名const char*, 读写方式const char*mode);
+	int fclose(FILE*);
+	int fgetc(FILE*);根据读写位置指针读取字符
+	int fputc(int , FILE*);第一个参数传字符类型也是可以的，转为ASCII码
+	char* fgets(char*, 最大长度int, FILE*);把有效数据传给第一个参数，
+	int fputs(const char*, FILE*);
+	int fprintf(FILE*, const char*, ...);
+	int fscanf(FILE*, const char*, ...);这两个格式化读写较为特殊，因为文件类型指针在第一个参数位置
+	size_t fread(void*, 步长size_t, 步数size_t, FILE*);把有效数据传给第一个参数
+	size_t fwrite(const void*, 步长size_t, 步数size_t, FILE*);
+	int fseek(FILE*, 相对位移long, 位置参数int);
+	long ftell(FILE*);取得读写位置指针偏移量
+	void rewind(FILE*);读写位置指针回到文件开头
+	int feof(FILE*);是否到了末尾
+	int ferror(FILE*);
+	void clearerr(FILE*);清除 EOF 标志
+	void exit(int);终止程序
+*/
+//一般，若返回类型为指针，失败为NULL
+//若不为指针，失败为EOF
+//特例有：foef()在末尾返回非零，不在末尾返回0
 
+
+#define RUN_EXAMPLE_1 0
+#if RUN_EXAMPLE_1 == 1
+//使用文件保存成绩单，实现根据学号查找成绩单的功能
+#include<stdio.h>
+#define L 20      //宏定义最大长度，便于修改
+FILE* cardpointer;//指向FILE结构体类型的指针，用于标识和打开文件
+struct achievement
+{
+	int number;
+	char name[L];
+	int achieve;//成绩
+};
+//输出检索结果函数
+void out_show(struct achievement* card0)
+{
+	printf("%d\t%s\t%d\n", card0->number, card0->name, card0->achieve);
+	//\t是制表符，用于对齐输出
+}
+void search(int);//检索函数声明
+//假设全部成绩单存放在card.dat这个文件中
+int main()
+{
+	int num;
+	cardpointer = fopen("card.dat", "rb");//打开文件，以二进制方式只读
+	//在工作目录的文件夹（一般也是main.cpp所在文件夹）中检索，若找不到返回null
+	//不必从头一个一个输入每个学生的信息，信息已经储存在文件中，用文件指针读取即可
+	printf("input the searching student number:");
+	scanf("%d", &num);
+	while (num != -1)//以输入-1作为终止标志
+	{
+		search(num);
+		printf("input the searching student number:");
+		scanf("%d", &num);//重复输入
+	}
+	printf("End of search");
+	fclose(cardpointer);//关闭文件
+	return 0;//主函数结束
+}
+void search(int no)
+{
+	struct achievement card;
+	bool flag = false;
+	rewind(cardpointer);//将文件指针重置到文件开头
+	while (!feof(cardpointer))//如果指针没到文件末尾，进入循环
+	{
+		fread(&card, sizeof(struct achievement), 1, cardpointer);
+		if (card.number == no)
+		{
+			printf("Find it\n");
+			out_show(&card);
+			flag = true;
+		}
+	}
+	if (!flag)//若没有找到
+	{
+		printf("Cannot find\n");
+	}
+}
+
+#endif
+//从不同的角度看，文件可以分为不同的类型
+//操作角度：顺序文件，随机文件
+//用户角度：普通文件，设备文件
+//内部编码方式角度：ASCII文件，二进制文件
+
+//文件名是文件的唯一标识，对于"card.dat",前部分是主文件名，后缀是扩展名
+//扩展名可以省略，但通常保留以判断文件类型：
+/*  .c	C语言源程序文件		.cpp C++语言源程序文件
+*   .h	头文件               .jpg 图片文件
+*   .txt文本文件             .doc word文档文件*/
+
+//在文件名前可以附加磁盘目录的路径信息如"E: \doc\programming\test.c",注意这是反斜杠，从磁盘盘符开始，这是绝对文件名
+//从某个文件夹开始，成为相对文件名
+//绝对路径往往不确定，其依赖于程序安装位置、用户名、盘符、系统语言和操作系统，写死路径会导致代码无法跨环境运行。
+//工程中优先用相对路径
+//通常用正斜杠./和../表示当前路径和当前路径的上一层
+//如./data/achieve.txt表示当前路径下文件夹data中的文本文件achieve.txt
+//如../achieve.txt表示当前路径上一层文件夹的文件
+
+//顺序文件有读模式和写模式，顺序文件只能处于两种文件之一。
+//顺序文件只能进行顺序操作，从文件第一个成分开始读，从文章末尾接着写
+//随机文件的特点是对文件的操作是随机的。在同一时刻，既可以向文件中写，又可以从文件中读，也可以跳着读，反着读。
+
+//普通文件就是被操作的数据集
+//设备文件指的是外部设备，如显示器为标准输出文件，键盘为标准输入文件
+
+//ASCII文件也成为文本文件，每个字符对应一个字节，用于存放该字符的ASCII码，n个字符占用n个字节
+//可以在屏幕上显示，源程序文件就是ASCII文件
+//二进制文件将数据以二进制编码存放到文件中，1234只用两个字节便可存储，这是给计算机看的而不是给人看的，现在编写的文件是ASCII文件，可以给人看，也可以给编译器看
+//狭义上二进制文件指文本文件以外的所有文件，广义上所有文件都是二进制文件
+
+//流式文件：C语言把文件一律看成字节流，以字节为单位进行操作
+
+//文件指针：上述程序的cardpointer就是文件指针，C语言为每个文件在内存中开辟了一个区域，用来存放文件的相关信息，这个区域构成FILE类型的结构体
+//FILE由系统定义，定义在stdio.h当中
+
+//读写位置指针：上述search函数中的card指针
+
+//特殊常量：用于标志文件处理状态，也定义在stdio.h
+//EOF：值为-1，表示文件结束或文件操作出错
+//NULL：值为0，表示文件打开失败等等
+
+//文件操作全部由系统定义的库函数实现
+
+//打开关闭文件：
+//FILE* fp=fopen("card.dat","rb");
+
+//打开函数两个参数全为字符串，第一个字符串为要打开的文件名，第二个字符串为打开方式，若操作出错，返回空指针NULL
+/*	关于打开方式，要打开ASCII文件
+*	"r"		只读
+*	"w"		只写,原有文件内容被删除
+*	"a"		继续写(add)，不删除原有内容，指向文件末尾
+*	"r+"	可读可写，打开
+*	"w+"	可读可写，打开，可新建，删除原有内容
+*	"a+"	可读可写，打开，可新建，不删除原有内容，指向文件末尾
+* 对于而进出文件，r变为rb,以此类推
+*/
+//fclose(fp);
+//关闭函数参数为文件类型指针，操作成功返回0，失败返回EOF
+#define RUN_EXAMPLE_2 0
+#if RUN_EXAMPLE_2 == 1
+//字符读写：把sourse.txt内容复制到另一个文件objective.txt中
+#include<stdio.h>
+int main()
+{
+	FILE* inputfile = fopen("source.txt", "r");
+	FILE* outputfile = fopen("objective.txt", "w");
+	char ch;
+	while ((ch = fgetc(inputfile)) != EOF)
+	{
+		fputc(ch, outputfile);
+	}
+	fclose(inputfile);
+	fclose(outputfile);
+	return 0;
+
+}
+#endif
+//int fgetc(FILE* fp);
+//功能：从fp指向的文件读取一个字符，同时将读写位置指针向前移动1个字节如果操作成功，返回ASCII码，失败或结束则返回EOF
+//int fputc(char,FILE*fp);
+//功能：向fp指向的文件的读写位置指针位置写入一个字符，同时将读写位置指针向前移动1个字节如果操作成功，返回ASCII码，失败或结束则返回EOF
+#if RUN_EXAMPLE_2 == 2
+//遇到换行符加个行号
+#include<stdio.h>
+int main()
+{
+	FILE* infile = fopen("source.txt", "r");
+	FILE* outfile = fopen("objective.txt", "w");
+	if (infile == NULL || outfile == NULL)
+	{
+		printf("文件打开失败\n");
+		return 0;
+	}
+	char ch;
+	int linenum = 0;//行号
+	fprintf(outfile, "%5d\t", ++linenum);//格式化读写
+	while ((ch = fgetc(infile)) != EOF)
+	{
+		fputc(ch, outfile);
+		if (ch == '\n')
+		{
+			fprintf(outfile, "%5d\t", ++linenum);
+		}
+	}
+	fclose(infile);
+	fclose(outfile);
+	return 0;
+}
+#endif
+//逐字符读写效率较低，也可以逐个字符串进行读写
+#define RUN_EXAMPLE_3 0
+#if RUN_EXAMPLE_3 == 1
+//字符串读写版本：带行号副本
+//设源文件长度不超过256
+#include<stdio.h>
+#define SIZE 256
+int main()
+{
+	char buf[SIZE];
+	FILE* inputfile = fopen("source.txt", "r");
+	FILE* outputfile = fopen("objective.txt", "w");
+	int line = 1;
+	while ((fgets(buf, SIZE, inputfile) != NULL))
+	{
+		fprintf(outputfile, "%5d\t", line++);
+		fputs(buf, outputfile);
+	}
+	fclose(inputfile);
+	fclose(outputfile);
+	return 0;
+}
+#endif
+//char* gets(char*buf,int size,FILE* inputfile)
+//从指向的文件中读取一个字符串，将此字符串保存在str所指向的字符数组之中。
+//该字符串的自然结束符是换行符或者文件结束符，文本文件没有'\0'之说
+//size是限制字符串的最大长度，若读了size-1个字符还未停止，强制结束，在buf数组末尾加上'\0'
+//再将读写位置字符向前移动读取的字节个数
+//操作成功返回buf首地址，失败则返回NULL
+//int fputs(char*buf,FILE* outputfile)
+//从读写位置指针写入，写完后读写位置指针移动num个单位，操作成功返回非负值，失败则返回EOF
+
+//格式化读写：
+//如以上程序fprintf(FILE*fp,"%d",line++)所示
+//就是把整数line从内部数据翻译为ASCII字符数据输出
+//int fscanf(FILE*fp,char* format,arg_list);
+//从fp所指向的文件中读取数据，按照format格式送入arg_list中
+//如果成功，返回读取的参数个数，失败则返回EOF
+//int printf(FILE*fp,char*format,arg_list);
+//将arg_list的各参数按照format格式进行转换，输出到fp所指文件
+//如果成功，返回读取的参数个数，失败则返回EOF
+#define RUN_EXAMPLE_4 0
+#if RUN_EXAMPLE_4 == 1
+//数据块读写:将两个递增排序的整数文件合并为一个递增排序的文件
+//fread(&card, sizeof(struct achievement), 1, cardpointer);
+#include<stdio.h>
+int main()
+{
+	FILE* f1, * f2, * f3;
+	int v1, v2;
+	f1 = fopen("file1.dat", "rb");//以只读方式打开二进制文件
+	f2 = fopen("file2.dat", "rb");
+	f3 = fopen("file3.dat", "wb");
+	fread(&v1, sizeof(int), 1, f1);
+	fread(&v2, sizeof(int), 1, f2);
+	while (!feof(f1) && !feof(f2))//两个读写位置文件都未到末尾
+	{
+		if (v1 < v2)
+		{
+			fwrite(&v1, sizeof(int), 1, f3);
+			fread(&v1, sizeof(int), 1, f1);
+		}
+		else
+		{
+			fwrite(&v2, sizeof(int), 1, f3);
+			fread(&v2, sizeof(int), 1, f2);
+		}
+	}
+	while (!feof(f1))
+	{
+		fwrite(&v1, sizeof(int), 1, f3);
+		fread(&v1, sizeof(int), 1, f1);
+	}
+	while (!feof(f2))
+	{
+		fwrite(&v2, sizeof(int), 1, f3);
+		fread(&v2, sizeof(int), 1, f2);
+	}
+	fclose(f1);fclose(f2);fclose(f3);
+	return 0;
+}
+#endif
+//feof(fp)，若未到达，返回值非零，若到达末尾，返回0
+//sizeof()这是一个单目运算符而不是函数，用于求类型长度
+//由于不同系统同一个数据类型所占字节可能不一样，统一用sizeof可移植性强
+//int fread(void*buf,int size,int count,FILE*fp);
+//从fp所指文件中读取count各字段，每个字段为size个字节，将这些数据送进buf所指向的数据区，一般来说。size应该是相同的，可以正好对应
+//操作成功返回count，失败则返回EOF
+//int fwrite(void*buf,int size,int count,FILE*fp)
+//原理与fread相类似
+//错误或文件结束，返回值为其他
+#define RUN_EXAMPLE_5 0
+#if RUN_EXAMPLE_5 == 1
+//文件定位：用二分法对递增排序二进制整数文件进行检索
+#include<stdio.h>
+int half_search_of_file(FILE* fp,int key)
+{
+	int lower, upper, j;//上界，下界，中点
+	int v;				//用于从文件读入整数,fread的第一个参数，存储数据
+	lower = 0;
+	fseek(fp, 0, SEEK_END);//把读写位置指针移动到文件末尾
+	upper = ftell(fp) / sizeof(int);//ftell(FILE*)用于计算读写位置指针偏移量
+	while (upper - lower >= 0)
+	{
+		j = (lower + upper) / 2;
+		fseek(fp, j * sizeof(int), SEEK_SET);
+		fread(&v, sizeof(int), 1, fp);//读取二分点数据
+		if (key == v)return j;
+		else
+		{
+			if (key > v)lower = j + 1;
+			else upper = j - 1;
+		}
+	}
+	return EOF;
+}
+#endif
+//void rewind(FILE*fp);
+//使读写位置指针重新指向文件的开始位置，如例1的每次检索前都rewind一次
+//int fseek(FILE*fp,long offset,int orign);
+//将读写位置指针放置到orign+offset的位置，偏移量offset可以是负数
+//第三个参数要使用宏，SEEK_SET,SEEK_CURRENT,SEEK_END分别表示文件开始，当前位置，文件结尾，数字代表分别为0，1，2
+//若操作成功，返回0，失败返回非0，-1
+//long ftell(FILE*fp)
+//返回读写位置指针当前位置，操作成功返回位置数字，失败返回EOF
+//int feof(FILE*fp)
+//判断是否结束，返回非零代表结束，0代表未结束
+#define RUN_EXAMPLE_6 0
+#if RUN_EXAMPLE_6 == 1
+//命令行参数：真正实现DOS的文件复制命令，把给定文件复制到另一个给定文件中
+//命令格式应该如下：
+//可执行文件名  源文件名  目标文件名
+#include<stdio.h>
+#include<stdlib.h>
+int main(int argc,char*argv[])
+{
+	FILE* inputfile, * outputfile;
+	char ch;
+	if (argc != 3)//如果参数数量不对
+	{
+		printf("The number of arguments not correct\n");
+		printf("\n Usage: 可执行文件名 source-file dest-file\n");
+		exit(0);//关闭所有文件，终止正在进行的程序，定义在头文件stdlib.h中
+		//exit(1)表示异常退出，exit(0)表示正常退出
+	}//确保程序具有健壮性
+	if ((inputfile = fopen(argv[1], "r")) == NULL)
+	{
+		printf("Cannot open source file\n");
+		exit(0);
+	}//确保程序具有健壮性
+	if ((outputfile = fopen(argv[2], "w")) == NULL)
+	{
+		printf("Cannot creat destination file\n");
+		exit(0);
+	}//确保程序具有健壮性
+	while ((ch = fgetc(inputfile)) != EOF)
+	{
+		fputc(ch, outputfile);
+	}
+	fclose(inputfile);fclose(outputfile);
+	return 0;
+}
+#endif
+//程序取得实参的方法有两种：一个是操作员通过命令行输入，而是通过开发环境设置
+#define RUN_EXAMPLE_7 0
+#if RUN_EXAMPLE_7 == 1
+//编写程序，输出命令行参数的内容
+#include<stdio.h>
+int main(int argc,char*argv[])
+{
+	int i;
+	printf("argc=%d\n", argc);
+	printf("Command name is %s", argv[0]);
+	for (int i = 1;i < argc;i++)
+	{
+		printf("Argument%d is %s\n", argc, argv[i]);
+	}
+	return 0;
+}
+#endif
+
+
+
+//模板
+
+#define RUN_EXAMPLE_ 0
+#if RUN_EXAMPLE_ == 1
+#include<stdio.h>
+int main()
+{
+
+}
+#endif
