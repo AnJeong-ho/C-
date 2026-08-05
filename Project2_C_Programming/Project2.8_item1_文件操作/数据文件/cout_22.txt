@@ -1,0 +1,12 @@
+Hello World                             Goodbye World
+This is line 2                          This is another line
+And line 3                              Final line here
+Programming in C                        C Programming is fun
+File operation test                     Test complete
+Good luck!                              End of file
+                                        Goodbye World
+                                        This is another line
+                                        Final line here
+                                        C Programming is fun
+                                        Test complete
+                                        End of file

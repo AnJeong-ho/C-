@@ -1,0 +1,20 @@
+count is 30,multi_count is 19
+C   2
+Hello   2
+It   1
+Programming   1
+This   2
+a   3
+and   1
+contains   1
+file   1
+fun   1
+in   1
+is   4
+language   1
+powerful   1
+punctuation   1
+some   2
+test   2
+words   1
+world   2

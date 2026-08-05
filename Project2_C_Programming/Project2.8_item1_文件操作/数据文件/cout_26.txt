@@ -1,0 +1,5 @@
+Hello, shi jie! This shi yi ge ce shi wen jian.
+It contains some words, and some punctuation.
+Hello shi jie! This shi yi ge ce shi.
+Programming in C shi fun.
+C shi yi ge powerful language.
